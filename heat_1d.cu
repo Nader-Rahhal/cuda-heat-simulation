@@ -34,8 +34,8 @@ int main(void) {
 
     cudaMemcpy(old_temps_d, old_temps_host, N * sizeof(float), cudaMemcpyHostToDevice);
 
-    int blocksPerGrid = 1;
     int threadsPerBlock = 256;
+    int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
 
     for (int t = 0; t < 100; t++) {
         heat_update<<<blocksPerGrid, threadsPerBlock>>>(old_temps_d, new_temps_d, N, THERMAL_DIFFUSIVITY, DISTANCE_BETWEEN_CELLS);
