@@ -54,7 +54,7 @@ int main(void) {
     dim3 threadsPerBlock(16, 16);
 
     for (int t = 0; t < 100; t++) {
-        heat_update<<<blocksPerGrid, threadsPerBlock>>>(old_temps_d, new_temps_d, N, THERMAL_DIFFUSIVITY, DISTANCE_BETWEEN_CELLS, );
+        heat_update<<<blocksPerGrid, threadsPerBlock>>>(old_temps_d, new_temps_d, N, THERMAL_DIFFUSIVITY, DISTANCE_BETWEEN_CELLS, width);
         cudaDeviceSynchronize();
 
         float *temp = old_temps_d;
