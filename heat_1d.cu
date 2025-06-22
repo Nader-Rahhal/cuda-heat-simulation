@@ -1,10 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <GLFW/glfw3.h>
-#include <glad/glad.h>
+#include <fstream>
 
 #define THERMAL_DIFFUSIVITY 100.0f
 #define DISTANCE_BETWEEN_CELLS 100.0f
+
+// want to iteraively add data to file after every iteration - can be normal C func called after kernel 
+
+void write_to_output_1d(const char* filename, float* temps, int N) {
+    FILE* fd = fopen(filename, "a"); // open in append mode
+    if (!fd) {
+        perror("Failed to open output file");
+        return;
+    }
+
+    for (int i = 0; i < N; ++i) {
+        fprintf(fd, "%.6f ", temps[i]);  // write each value with space
+    }
+    fprintf(fd, "\n");  // end of one iteration
+    fclose(fd);
+}
+
+
 
 __global__ void heat_update(float *old_temps, float *new_temps, int N, float alpha, float dx) {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
@@ -38,17 +55,23 @@ int main(void) {
 
     int threadsPerBlock = 256;
     int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
+	
+    float result[N];
+    fclose(fopen("output_1d.txt", "w"));	
 
     for (int t = 0; t < 100; t++) {
         heat_update<<<blocksPerGrid, threadsPerBlock>>>(old_temps_d, new_temps_d, N, THERMAL_DIFFUSIVITY, DISTANCE_BETWEEN_CELLS);
         cudaDeviceSynchronize();
 
+	cudaMemcpy(result, old_temps_d, N * sizeof(float), cudaMemcpyDeviceToHost);
+        write_to_output_1d("output_1d.txt", result, N);
+
         float *temp = old_temps_d;
         old_temps_d = new_temps_d;
         new_temps_d = temp;
+
     }
 
-    float result[N];
     cudaMemcpy(result, old_temps_d, N * sizeof(float), cudaMemcpyDeviceToHost);
 
     printf("Final temperatures:\n");
@@ -58,6 +81,5 @@ int main(void) {
 
     cudaFree(old_temps_d);
     cudaFree(new_temps_d);
-
     return 0;
 }

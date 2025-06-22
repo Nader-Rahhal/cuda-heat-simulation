@@ -38,11 +38,11 @@ NVCCFLAGS = -ccbin=$(CXX) -O3 --std=c++14
 # Targets
 TARGET_1D = 1D
 TARGET_2D = 2D
-TARGET_2DGL = 2Dgl
+TARGET_1DGL = 1DGL
 
 SRC_1D = heat_1d.cu
 SRC_2D = heat_2d.cu
-SRC_2DGL = heat_1d.cu
+SRC_1DGL = heat_1d.cu
 
 all: $(TARGET_1D) $(TARGET_2D)
 
@@ -52,6 +52,9 @@ all: $(TARGET_1D) $(TARGET_2D)
 
 2dgl: glfw $(TARGET_2DGL)
 
+glad.o: glad.c
+	$(CC) $(CFLAGS) -Iglad -IKHR -c $< -o $@
+
 $(TARGET_1D): $(SRC_1D)
 	$(NVCC) $(NVCCFLAGS) -o $@ $<
 
@@ -59,12 +62,11 @@ $(TARGET_2D): $(SRC_2D)
 	$(NVCC) $(NVCCFLAGS) -o $@ $<
 
 
-$(TARGET_2DGL): $(SRC_2DGL)
-	$(NVCC) $(NVCCFLAGS) -I$(GLFW_DIR)/include -c $< -o $@.o
-	$(CXX) $@.o -L$(GLFW_BUILD_DIR)/src -lglfw3 \
+1DGL: heat_1d.cu glad.o
+	$(CXX) 1DGL.o glad.o -L$(GLFW_BUILD_DIR)/src -lglfw3 \
 		-lGL -lX11 -lpthread -ldl -lm \
 		-L/usr/local/cuda/lib64 -lcudart -o $@
 
 clean:
-	rm -f $(TARGET_1D) $(TARGET_2D)
+	rm -f $(TARGET_1D) $(TARGET_2D) $(TARGET_1DGL)
 	rm -f $(GLFW_TARBALL)
