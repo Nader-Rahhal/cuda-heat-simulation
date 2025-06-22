@@ -11,12 +11,15 @@ GLFW_LIB = $(GLFW_BUILD_DIR)/src/libglfw3.a
 glfw:
 	$(MAKE) $(GLFW_LIB)
 
+# Download GLFW tarball
 $(GLFW_TARBALL):
 	wget https://github.com/glfw/glfw/releases/download/$(GLFW_VERSION)/$(GLFW_TARBALL)
 
+# Unzip GLFW
 $(GLFW_DIR): $(GLFW_TARBALL)
 	unzip -o $(GLFW_TARBALL)
 
+# Build GLFW from source
 $(GLFW_LIB): $(GLFW_DIR)
 	mkdir -p $(GLFW_BUILD_DIR) && \
 	cd $(GLFW_BUILD_DIR) && \
@@ -39,7 +42,7 @@ TARGET_2DGL = 2Dgl
 
 SRC_1D = heat_1d.cu
 SRC_2D = heat_2d.cu
-SRC_2DGL = heat_2d.cu
+SRC_2DGL = heat_1d.cu
 
 all: $(TARGET_1D) $(TARGET_2D)
 
@@ -49,20 +52,19 @@ all: $(TARGET_1D) $(TARGET_2D)
 
 2dgl: glfw $(TARGET_2DGL)
 
-# Regular CUDA builds
 $(TARGET_1D): $(SRC_1D)
 	$(NVCC) $(NVCCFLAGS) -o $@ $<
 
 $(TARGET_2D): $(SRC_2D)
 	$(NVCC) $(NVCCFLAGS) -o $@ $<
 
-# GLFW + CUDA build for visualization
+
 $(TARGET_2DGL): $(SRC_2DGL)
-	$(NVCC) $(NVCCFLAGS) \
-	-I$(GLFW_DIR)/include \
-	-L$(GLFW_BUILD_DIR)/src -lglfw3 \
-	-framework OpenGL -framework Cocoa -framework IOKit \
-	-o $@ $<
+	$(NVCC) $(NVCCFLAGS) -I$(GLFW_DIR)/include -c $< -o $@.o
+	$(CXX) $@.o -L$(GLFW_BUILD_DIR)/src -lglfw3 \
+		-lGL -lX11 -lpthread -ldl -lm \
+		-L/usr/local/cuda/lib64 -lcudart -o $@
 
 clean:
-	rm -f $(TARGET_1D) $(TARGET_2D) $(TARGET_2DGL)
+	rm -f $(TARGET_1D) $(TARGET_2D)
+	rm -f $(GLFW_TARBALL)
