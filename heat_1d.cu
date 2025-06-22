@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
 
 #define THERMAL_DIFFUSIVITY 100.0f
 #define DISTANCE_BETWEEN_CELLS 100.0f
