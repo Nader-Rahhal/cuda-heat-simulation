@@ -57,14 +57,14 @@ int main(void) {
     int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
 	
     float result[N];
-    fclose(fopen("output_1d.txt", "w"));	
+    fclose(fopen("output/1D/output_1d.txt", "w"));	
 
     for (int t = 0; t < 100; t++) {
         heat_update<<<blocksPerGrid, threadsPerBlock>>>(old_temps_d, new_temps_d, N, THERMAL_DIFFUSIVITY, DISTANCE_BETWEEN_CELLS);
         cudaDeviceSynchronize();
 
 	cudaMemcpy(result, old_temps_d, N * sizeof(float), cudaMemcpyDeviceToHost);
-        write_to_output_1d("output_1d.txt", result, N);
+        write_to_output_1d("output/1D/output_1d.txt", result, N);
 
         float *temp = old_temps_d;
         old_temps_d = new_temps_d;
